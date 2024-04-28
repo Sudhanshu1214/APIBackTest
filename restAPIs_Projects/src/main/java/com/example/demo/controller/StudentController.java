@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.demo.config.PropertyFile;
 import com.example.demo.constant.Constant;
 import com.example.demo.model.Student;
+import com.example.demo.send.email.EmailService;
 import com.example.demo.service.StudentDao;
 
 @RestController
@@ -35,6 +34,9 @@ public class StudentController {
 
 	@Autowired
 	private StudentDao studentDao;
+	
+	@Autowired
+    private EmailService emailService;
 
 	public StudentController(Environment env) {
 		this.env = env;
@@ -198,5 +200,33 @@ public class StudentController {
 			response.put(Constant.DATA, null);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
+	}
+	
+	@GetMapping(value = "/sendEmail")
+	public ResponseEntity<Map<String, Object>> sendEmail() {
+		logger.info("StudentController:sendEmail called!!");
+		Map<String, Object> response = new HashMap<>();
+		try {
+			 String emailTo = env.getProperty(Constant.EMAIL_CONSTANTS.EMAIL_TO);
+			 String subject = env.getProperty(Constant.EMAIL_CONSTANTS.EMAIL_SUBJECT);
+			 String text = env.getProperty(Constant.EMAIL_CONSTANTS.EMAIL_MESSEGE);
+			 emailService.sendSimpleMessage(emailTo, subject, text);
+
+//			if (savedStudent != null) {
+//				response.put(Constant.STATUS, "Success");
+//				response.put(Constant.ID, savedStudent.getId());
+//				return ResponseEntity.ok(response);
+//			}
+//			 else {
+//				response.put(Constant.STATUS, "Failure");
+//				response.put(Constant.DATA, null);
+//				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//			}
+		} catch (Exception e) {
+			response.put(Constant.STATUS, "Failure");
+			response.put(Constant.DATA, null);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		return null;
 	}
 }
